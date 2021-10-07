@@ -14,6 +14,12 @@ class Card():
     
     self.value = value
     self.suit  = suit
+  
+  def is_skip_card(self):
+    return self.value in ['+2', 'skip']
+  
+  def is_reverse_card(self):
+    return self.value == 'reverse'
 
 class Deck():
   def __init__(self, half: bool = False):
@@ -89,6 +95,7 @@ class Game():
     self.discard_pile = []
     self.players = players
     self.finished = False
+    self.direction = +1
     
     self.current_player_index = 0
     
@@ -101,13 +108,34 @@ class Game():
     self._draw_discard()
 
   def get_current_player(self):
-    return self.players[self.current_player_index]
+    return self.players[self.current_player_index]   
 
   def progress(self, play: Play):
-    if play.player.name != self.get_current_player().name:
-      raise ValueError
-    else:
-      self.current_player_index = (self.current_player_index + 1) % len(self.players)
+    if self.get_current_player() != play.player:
+      raise ValueError(f"Current player should be {self.get_current_player()}")    
+    
+    if play.action == 'play':
+      self.play(play)
+
+  def play(self, play: Play):
+    if play.card is None or not is_card_playable(play.card, self.get_discard_top()):
+      raise ValueError(f"Play card is invalid: {play.card}")
+    
+    self.get_current_player().hand.remove(play.card)
+    self.discard_pile.append(play.card)
+    
+    if play.card.is_reverse_card():
+      self.direction = -1
+    
+    skip = 0
+    if play.card.is_skip_card():
+      skip = 1
+
+    self._set_next_player(skip)
+  
+  def _set_next_player(self, skip: int = 0):
+    self.current_player_index = (self.current_player_index + (1 + skip) * self.direction) % len(self.players)
+
 
   def get_discard_top(self):
     return self.discard_pile[-1]

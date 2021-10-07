@@ -1,11 +1,12 @@
 from rich import print
 from uno import Card, Game, Play, Player, is_card_playable
 
-INPUTS = [ 'exit', 'buy' ]
+COMMANDS = [ 'exit', 'buy', 'play' ]
 
 SYMBOLS = {
-  'reverse': "🔄",
-  'skip': "🚫"
+  'reverse': "r",
+  'skip': "s",
+  'wild': "w"
 }
 
 
@@ -33,24 +34,27 @@ def print_player_hand(player: Player, discard_top: Card):
   print(f"[{player.color}]{player.name}'s hand:[/{player.color}]")
   hand_str = ""
   for card in player.hand:
-    additional_str = ''
+    card_str = get_card_str(card)
     if is_card_playable(card, discard_top):
-      additional_str = '*'
-    hand_str += get_card_str(card) + f"{additional_str} "
+      card_str = f"[underline]{card_str}[/underline]"
+    
+    hand_str += card_str + " "
   print(hand_str)
+  print('|0| |1| |2| |3| |4| |5| |6|')
 
 def validate_input(input: str):
-  return input in INPUTS
+  return input in COMMANDS
 
 def main():
   players = get_players()
 
   game = Game(players)
   game.start()
-  discard_top = game.get_discard_top()
 
   while not game.finished:
     player = game.get_current_player()
+    discard_top = game.get_discard_top()
+    
     print(f"[bold grey] Discard: {get_card_str(discard_top)}[/bold grey]")
     print(f"{player.name}'s turn")
     print_player_hand(player, discard_top)
@@ -58,20 +62,31 @@ def main():
     valid_input = False
     while not valid_input:
       player_input = input("> ")
-      valid_input = validate_input(player_input)
-      
+      command, args = parse_input(player_input)
+      valid_input = validate_input(command)
     
-    if player_input == 'exit':
+
+    if command == 'exit':
       game.finish()
-    else:
+    elif command == 'play':
+      card_index = int(args.strip())
+      
       game.progress(Play(
         player,
-        'buy',
-        None
+        'play',
+        player.hand[card_index]
       ))
 
 
     if game.is_finished(): break
+
+def parse_input(player_input):
+    player_input = player_input.strip()
+    input_parts = player_input.split(' ')
+    
+    command = input_parts.pop(0)
+    args = ' '.join(input_parts)
+    return command,args
 
     
 
