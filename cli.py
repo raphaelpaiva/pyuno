@@ -1,7 +1,7 @@
 from rich import print
 from uno import Card, Game, Play, Player, is_card_playable
 
-COMMANDS = [ 'exit', 'buy', 'play' ]
+COMMANDS = [ 'exit', 'draw', 'play', 'pass' ]
 
 SYMBOLS = {
   'reverse': "r",
@@ -40,7 +40,10 @@ def print_player_hand(player: Player, discard_top: Card):
     
     hand_str += card_str + " "
   print(hand_str)
-  print('|0| |1| |2| |3| |4| |5| |6|')
+  index_str = ""
+  for i in range(len(player.hand)):
+    index_str += f"|{i}| "
+  print(index_str)
 
 def validate_input(input: str):
   return input in COMMANDS
@@ -70,11 +73,25 @@ def main():
       game.finish()
     elif command == 'play':
       card_index = int(args.strip())
+
+      card = player.hand[card_index]
       
       game.progress(Play(
         player,
         'play',
-        player.hand[card_index]
+        card
+      ))
+    elif command == 'draw':
+      game.progress(Play(
+        player,
+        'draw',
+        None
+      ))
+    elif command == 'pass':
+      game.progress(Play(
+        player,
+        'pass',
+        None
       ))
 
 
