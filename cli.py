@@ -72,15 +72,23 @@ def main():
     if command == 'exit':
       game.finish()
     elif command == 'play':
-      card_index = int(args.strip())
+      args_list = args.split(' ')
+      card_index = int(args_list[0].strip())
 
-      card = player.hand[card_index]
+      try:
+        card = player.hand[card_index]
+      except IndexError:
+        continue
+      suit = args_list[1].strip() if len(args_list) > 1 else None
       
       game.progress(Play(
         player,
         'play',
-        card
+        card=card,
+        suit=suit
       ))
+
+
     elif command == 'draw':
       game.progress(Play(
         player,
