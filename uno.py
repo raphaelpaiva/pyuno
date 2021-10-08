@@ -1,6 +1,6 @@
 
 import random
-from typing import List, Union
+from typing import List
 
 SUITS        = ['red', 'green', 'blue', 'yellow', 'wild']
 VALUES       = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+2', '+4', 'skip', 'reverse', 'wild']
@@ -18,19 +18,19 @@ class Card():
     self.value = value
     self.suit  = suit
   
-  def is_skip_card(self):
+  def is_skip_card(self) -> bool:
     return self.value in ['+2', 'skip']
   
-  def is_reverse_card(self):
+  def is_reverse_card(self) -> bool:
     return self.value == 'reverse'
 
-  def is_choose_color_card(self):
+  def is_choose_color_card(self) -> bool:
     return self.value in ['+4', 'wild']
   
-  def is_draw_card(self):
+  def is_draw_card(self) -> bool:
     return self.value in ['+2', '+4']
 
-  def draw_how_many(self):
+  def draw_how_many(self) -> bool:
     how_many = 0
     if self.value == '+2':
       how_many = 2
@@ -80,21 +80,21 @@ class Deck():
   def shuffle(self):
     random.shuffle(self.cards)
 
-  def get_hand(self):
+  def get_hand(self) -> List[Card]:
     hand = []
     for i in range(7):
       hand.append(self.cards.pop())
     
     return hand
   
-  def draw(self, num_cards = 1):
+  def draw(self, num_cards = 1) -> List[Card]:
     cards = []
     for i in range(num_cards):
       cards.append(self.cards.pop())
     
     return cards
 
-  def size(self):
+  def size(self) -> int:
     return len(self.cards)
 
 class Player():
@@ -117,16 +117,13 @@ class Play():
       if self.card.is_choose_color_card() and self.suit not in SUIT_CHOICES:
         raise ValueError(f"For {self.card.value} cards, suit choice must be one of {SUIT_CHOICES}")
 
-
   def get_card(self) -> Card:
     return self.card
   
   def get_suit(self) -> str:
     return self.suit
 
-
-
-def is_card_playable(card: Card, discard_top: Card):
+def is_card_playable(card: Card, discard_top: Card) -> bool:
   return card.value == discard_top.value \
     or card.suit == discard_top.suit \
     or card.suit == 'wild'
@@ -149,7 +146,7 @@ class Game():
 
     self._draw_discard()
 
-  def get_current_player(self):
+  def get_current_player(self) -> Player:
     return self.players[self.current_player_index]   
 
   def progress(self, play: Play):
@@ -172,7 +169,6 @@ class Game():
     elif play.action == 'draw':
       player.hand.extend(self.deck.draw())
     
-
   def play(self, play: Play):
     if play.get_card() is None or not is_card_playable(play.get_card(), self.get_discard_top()):
       raise ValueError(f"Play card is invalid: {play.get_card()}")
@@ -208,11 +204,9 @@ class Game():
   def _get_next_player_index(self, skip) -> int:
       return (self.current_player_index + (1 + skip) * self.direction) % len(self.players)
 
-
   def get_discard_top(self) -> Card:
     return self.discard_pile[-1]
   
-
   def finish(self):
     self.finished = True
 
