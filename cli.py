@@ -72,22 +72,26 @@ def main():
     if command == 'exit':
       game.finish()
     elif command == 'play':
-      args_list = args.split(' ')
-      card_index = int(args_list[0].strip())
 
       try:
+        args_list = args.split(' ')
+        card_index = int(args_list[0].strip())
         card = player.hand[card_index]
-      except IndexError:
-        continue
-      suit = args_list[1].strip() if len(args_list) > 1 else None
       
-      game.progress(Play(
-        player,
-        'play',
-        card=card,
-        suit=suit
-      ))
-
+        suit = args_list[1].strip() if len(args_list) > 1 else None
+        
+        game.progress(Play(
+          player,
+          'play',
+          card=card,
+          suit=suit
+        ))
+      except IndexError as ie:
+        print(f"[red reverse]ERROR[/red reverse]: {ie}")
+        continue
+      except ValueError as ve:
+        print(f"[red reverse]ERROR[/red reverse]: {ve}")
+        continue
 
     elif command == 'draw':
       game.progress(Play(
@@ -104,6 +108,8 @@ def main():
 
 
     if game.is_finished(): break
+
+  print(f"[{player.color} reverse]{player.name} WON![/{player.color} reverse]")
 
 def parse_input(player_input):
     player_input = player_input.strip()
