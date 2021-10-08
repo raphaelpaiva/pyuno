@@ -2,8 +2,10 @@
 import random
 from typing import List, Union
 
-SUITS  = ['red', 'green', 'blue', 'yellow', 'wild']
-VALUES = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+2', '+4', 'skip', 'reverse', 'wild']
+SUITS        = ['red', 'green', 'blue', 'yellow', 'wild']
+VALUES       = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+2', '+4', 'skip', 'reverse', 'wild']
+SUIT_CHOICES = list(SUITS)
+SUIT_CHOICES.remove('wild')
 
 class Card():
   def __init__(self, value: str, suit: str) -> None:
@@ -102,23 +104,27 @@ class Player():
     self.hand = []
 
 class Play():
-  def __init__(self, player: Player, action: str, args: Union[Card, int]) -> None:
+  def __init__(self, player: Player, action: str, card: Card = None, suit: str = None) -> None:
     self.player = player
     self.action = action
-    self.args   = args
+    self.card   = card
+    self.suit   = suit
 
-    if self.action == 'play' and not isinstance(self.args, Card):
-      raise ValueError(f"Play argument must be a card. It is {self.args}")
-    
-    if self.action == 'draw':
-      if self.args is None:
-        self.args = 0
-      elif not isinstance(self.args, int):
-        raise ValueError(f"Draw argument must be int or None. It is: {self.args}")
+    if self.action == 'play':
+      if self.card is None:
+        raise ValueError(f"Play argument must be a card. It is {self.card}")
+      
+      if self.card.is_choose_color_card() and self.suit not in SUIT_CHOICES:
+        raise ValueError(f"For {self.card.value} cards, suit choice must be one of {SUIT_CHOICES}")
+
 
   def get_card(self) -> Card:
-    if isinstance(self.args, Card):
-      return self.args
+    return self.card
+  
+  def get_suit(self) -> str:
+    return self.suit
+
+
 
 def is_card_playable(card: Card, discard_top: Card):
   return card.value == discard_top.value \
@@ -157,19 +163,25 @@ class Game():
     elif play.action == 'pass':
       self.skip()
 
-  def draw(self, play) -> List[Card]:
+  def draw(self, play: Play, player: Player = None) -> List[Card]:
+    if player is None:
+      player = self.get_current_player()
+
     if play.get_card() is not None and play.get_card().is_draw_card():
-      self.get_current_player().hand.extend(self.deck.draw(play.get_card().draw_how_many()))
+      player.hand.extend(self.deck.draw(play.get_card().draw_how_many()))
     elif play.action == 'draw':
-      self.get_current_player().hand.extend(self.deck.draw())
+      player.hand.extend(self.deck.draw())
     
 
   def play(self, play: Play):
     if play.get_card() is None or not is_card_playable(play.get_card(), self.get_discard_top()):
       raise ValueError(f"Play card is invalid: {play.get_card()}")
-    
+
     self.get_current_player().hand.remove(play.get_card())
     self.discard_pile.append(play.get_card())
+
+    if len(self.get_current_player().hand) < 1:
+      self.finish()
     
     if play.get_card().is_reverse_card():
       self.direction = -1
@@ -178,19 +190,26 @@ class Game():
     if play.get_card().is_skip_card():
       skip = 1
     
-    self._set_next_player(skip)
 
     if play.get_card().is_draw_card():
-      self.draw(play)
+      self.draw(play, self.players[self._get_next_player_index(0)])
+
+    if play.get_card().is_choose_color_card():
+      self.get_discard_top().suit = play.get_suit()
+    
+    self._set_next_player(skip)
   
   def skip(self):
     self._set_next_player()
 
   def _set_next_player(self, skip: int = 0):
-    self.current_player_index = (self.current_player_index + (1 + skip) * self.direction) % len(self.players)
+    self.current_player_index = self._get_next_player_index(skip)
+
+  def _get_next_player_index(self, skip) -> int:
+      return (self.current_player_index + (1 + skip) * self.direction) % len(self.players)
 
 
-  def get_discard_top(self):
+  def get_discard_top(self) -> Card:
     return self.discard_pile[-1]
   
 
