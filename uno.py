@@ -1,5 +1,6 @@
 
 import random
+import uuid
 from typing import List
 
 SUITS        = ['red', 'green', 'blue', 'yellow', 'wild']
@@ -7,8 +8,18 @@ VALUES       = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+2', '+4', 's
 SUIT_CHOICES = list(SUITS)
 SUIT_CHOICES.remove('wild')
 
-class Card():
-  def __init__(self, value: str, suit: str) -> None:
+class UnoObject(object):
+  def __init__(self, id: str = None) -> None:
+    if id is None:
+      self.id = str(uuid.uuid4())
+    else:
+      self.id = id
+  
+  def as_dict(): raise NotImplementedError()
+
+class Card(UnoObject):
+  def __init__(self, value: str, suit: str, id: str = None) -> None:
+    super().__init__(id)
     if value not in VALUES:
       raise ValueError(f"Value must be one of {VALUES}. Was {value}.")
 
@@ -38,9 +49,16 @@ class Card():
       how_many = 4
     
     return how_many
-
-class Deck():
-  def __init__(self, half: bool = False):
+  
+  def as_dict(self):
+    return {
+      'id': self.id,
+      'value': self.value,
+      'suit': self.suit
+    }
+class Deck(UnoObject):
+  def __init__(self, half: bool = False, id: str = None) -> None:
+    super().__init__(id)
     self.cards = []
     self.cards_by_suit = {}
     self.half = half
@@ -97,14 +115,25 @@ class Deck():
   def size(self) -> int:
     return len(self.cards)
 
-class Player():
-  def __init__(self, name: str, color: str) -> None:
+
+
+class Player(UnoObject):
+  def __init__(self, name: str, color: str, id: str = None) -> None:
+    super().__init__(id)
     self.name = name
     self.color = color
     self.hand = []
+  
+  def as_dict(self):
+    return {
+      'id': self.id,
+      'name': self.name,
+      'color': self.color
+    }
 
-class Play():
-  def __init__(self, player: Player, action: str, card: Card = None, suit: str = None) -> None:
+class Play(UnoObject):
+  def __init__(self, player: Player, action: str, card: Card = None, suit: str = None, id: str = None) -> None:
+    super().__init__(id)
     self.player = player
     self.action = action
     self.card   = card
@@ -128,13 +157,16 @@ def is_card_playable(card: Card, discard_top: Card) -> bool:
     or card.suit == discard_top.suit \
     or card.suit == 'wild'
 
-class Game():
-  def __init__(self, players: list) -> None:
+class Game(UnoObject):
+  def __init__(self, players: list, id: str = None) -> None:
+    super().__init__(id)
+    
     self.deck = Deck(half=True)
     self.discard_pile = []
     self.players = players
     self.finished = False
     self.direction = +1
+    self.winner = None
     
     self.current_player_index = 0
     
@@ -177,7 +209,7 @@ class Game():
     self.discard_pile.append(play.get_card())
 
     if len(self.get_current_player().hand) < 1:
-      self.finish()
+      self.finish(self.get_current_player())
     
     if play.get_card().is_reverse_card():
       self.direction = -1
@@ -207,8 +239,9 @@ class Game():
   def get_discard_top(self) -> Card:
     return self.discard_pile[-1]
   
-  def finish(self):
+  def finish(self, winner: Player = None):
     self.finished = True
+    self.winner = winner
 
   def is_finished(self):
     return self.finished

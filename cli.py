@@ -109,7 +109,8 @@ def main():
 
     if game.is_finished(): break
 
-  print(f"[{player.color} reverse]{player.name} WON![/{player.color} reverse]")
+  if game.winner is not None:
+    print(f"[{game.winner.color} reverse]{game.winner.name} WON![/{game.winner.color} reverse]")
 
 def parse_input(player_input):
     player_input = player_input.strip()
