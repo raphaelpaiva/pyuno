@@ -7,6 +7,7 @@ SUITS        = ['red', 'green', 'blue', 'yellow', 'wild']
 VALUES       = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+2', '+4', 'skip', 'reverse', 'wild']
 SUIT_CHOICES = list(SUITS)
 SUIT_CHOICES.remove('wild')
+PLAYER_HAND_SIZE = 7
 
 class UnoObject(object):
   def __init__(self, id: str = None) -> None:
@@ -56,6 +57,12 @@ class Card(UnoObject):
       'value': self.value,
       'suit': self.suit
     }
+  
+  def __str__(self):
+    return f"Card({self.value}, {self.suit}, {self.id})"
+  
+  def __repr__(self) -> str:
+      return str(self)
 class Deck(UnoObject):
   def __init__(self, half: bool = False, id: str = None) -> None:
     super().__init__(id)
@@ -69,8 +76,11 @@ class Deck(UnoObject):
   
   def _makedeck(self, suit: str):
     if suit != 'wild':
+      zero_card = Card('0', suit)
+      self.cards.append(zero_card)
+      self.cards_by_suit[suit].append(zero_card)
       for j in range(2 if not self.half else 1):
-        for i in range(0, 10):
+        for i in range(1, 10):
           card = Card(str(i), suit) 
           self.cards.append(card)
           self.cards_by_suit[suit].append(card)
@@ -100,7 +110,7 @@ class Deck(UnoObject):
 
   def get_hand(self) -> List[Card]:
     hand = []
-    for i in range(7):
+    for _ in range(PLAYER_HAND_SIZE):
       hand.append(self.cards.pop())
     
     return hand
@@ -114,8 +124,6 @@ class Deck(UnoObject):
 
   def size(self) -> int:
     return len(self.cards)
-
-
 
 class Player(UnoObject):
   def __init__(self, name: str, color: str, id: str = None) -> None:
