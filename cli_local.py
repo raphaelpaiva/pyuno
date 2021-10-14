@@ -1,3 +1,4 @@
+from typing import Any, Callable, List
 from rich import print
 from uno import Card, Game, Play, Player, is_card_playable
 
@@ -9,12 +10,27 @@ SYMBOLS = {
   'wild': "w"
 }
 
+def get_input(prompt: str = '> ', validator: Callable = lambda x: True) -> Any:
+  while True:
+    try:
+      value = input(prompt)
+      if validator(value):
+        return value
+    except Exception as e:
+      print(e)
 
-def get_players():
-  return [
-    Player('Raphael', 'red'),
-    Player('Jessica', 'blue')
-  ]
+def get_players() -> List[Player]:
+  num_players = get_input("How many players? [2-10]> ", lambda x: int(x) > 1 and int(x) <= 10)
+  
+  players = []
+  for i in range(int(num_players)):
+    player_number = i + 1
+    player_name = get_input(f"Player {player_number} Name> ")
+    player_color = get_input(f"Player {player_number} Name> ", lambda x: x in ['blue', 'green', 'yellow', 'red', 'cyan', 'magenta', 'white', 'gray'])
+
+    players.append(Player(player_name, player_color))
+
+  return players
 
 def get_suit_style(suit):
   if suit != 'wild':
