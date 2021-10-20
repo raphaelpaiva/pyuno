@@ -1,6 +1,6 @@
 import unittest
 import re
-from uno import PLAYER_HAND_SIZE, Card, VALUES, SUITS, Deck
+from uno import PLAYER_HAND_SIZE, Card, VALUES, SUITS, Deck, Game, Player
 
 class CardTest(unittest.TestCase):
   def testCardConstructor_okValue_okSuit(self):
@@ -31,6 +31,9 @@ class DeckTest(unittest.TestCase):
     decks = [Deck(half=False), Deck(half=True)]
     
     for deck in decks:
+      self._test_deck(deck)
+
+  def _test_deck(self, deck):
       expected_deck_cards = 56 if deck.half else 108
       self.assertEqual(len(deck.cards), expected_deck_cards, f"There should be {expected_deck_cards} cards in a {'half' if deck.half else 'full'} deck")
       
@@ -78,3 +81,24 @@ class DeckTest(unittest.TestCase):
 
     self.assertEqual(hand_size,   PLAYER_HAND_SIZE,   f"Expected hand size to be {PLAYER_HAND_SIZE}")
     self.assertEqual(deck.size(), expected_deck_size, f"Expected new deck size to be {expected_deck_size}")
+
+PLAYERS = [
+  Player('Player 1', 'red'),
+  Player('Player 2', 'green'),
+  Player('Player 3', 'blue'),
+]
+
+class GameTest(unittest.TestCase):
+  def test_init_twoPlayers(self):
+    # Must be half deck
+    game = Game(PLAYERS[:2])
+    self.assertEquals(len(game.players), 2)
+    self.assertTrue(game.deck.half, "Expected a two player game to be half deck.")
+    DeckTest()._test_deck(game.deck)
+  
+  def test_init_threePlayers(self):
+    # Must be full deck
+    game = Game(PLAYERS)
+    self.assertEqual(len(game.players), 3)
+    self.assertFalse(game.deck.half, "Expected a two player game to be full deck.")
+    DeckTest()._test_deck(game.deck)
