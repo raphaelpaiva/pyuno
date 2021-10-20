@@ -166,7 +166,7 @@ def is_card_playable(card: Card, discard_top: Card) -> bool:
     or card.suit == 'wild'
 
 class Game(UnoObject):
-  def __init__(self, players: list, id: str = None) -> None:
+  def __init__(self, players: List[Player], id: str = None) -> None:
     super().__init__(id)
     
     self.deck = Deck(half=True)
