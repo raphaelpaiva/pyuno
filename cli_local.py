@@ -129,12 +129,12 @@ def main():
     print(f"[{game.winner.color} reverse]{game.winner.name} WON![/{game.winner.color} reverse]")
 
 def parse_input(player_input):
-    player_input = player_input.strip()
-    input_parts = player_input.split(' ')
-    
-    command = input_parts.pop(0)
-    args = ' '.join(input_parts)
-    return command,args
+  player_input = player_input.strip()
+  input_parts = player_input.split(' ')
+  
+  command = input_parts.pop(0)
+  args = ' '.join(input_parts)
+  return command,args
 
     
 
