@@ -1,0 +1,12 @@
+{
+  "players": [
+    {
+      "name": "Raphael",
+      "color": "red"
+    },
+    {
+      "name": "Jessica",
+      "color": "blue"
+    }
+  ]
+}
