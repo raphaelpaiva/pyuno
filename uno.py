@@ -58,6 +58,14 @@ class Card(UnoObject):
       'suit': self.suit
     }
   
+  @staticmethod
+  def from_dict(card_dict: dict):
+    return Card(
+      id    = card_dict['id'],
+      value = card_dict['value'],
+      suit  = card_dict['suit']
+    )
+
   def __str__(self):
     return f"Card({self.value}, {self.suit}, {self.id})"
   
@@ -136,8 +144,22 @@ class Player(UnoObject):
     return {
       'id': self.id,
       'name': self.name,
-      'color': self.color
+      'color': self.color,
+      'hand': [c.as_dict() for c in self.hand]
     }
+  
+  @staticmethod
+  def from_dict(player_dict : dict):
+    player = Player(
+      id    = player_dict['id'],
+      name  = player_dict['name'],
+      color = player_dict['color']
+    )
+
+    if 'hand' in player_dict:
+      player.hand = [Card.from_dict(c_dict) for c_dict in player_dict['hand']]
+    
+    return player
 
 class Play(UnoObject):
   def __init__(self, player: Player, action: str, card: Card = None, suit: str = None, id: str = None) -> None:
@@ -170,24 +192,31 @@ class Game(UnoObject):
     super().__init__(id)
     
     self.deck = Deck(half=True)
-    self.discard_pile = []
-    self.players = players
-    self.finished = False
-    self.direction = +1
-    self.winner = None
+    self.discard_pile   = []
+    self.players        = players
+    self._players_by_id = {p.id: p for p in self.players}
+    self.started        = False
+    self.finished       = False
+    self.direction      = +1
+    self.winner         = None
     
     self.current_player_index = 0
     
   def start(self):
-    self.deck.shuffle()
-    
-    for player in self.players:
-      player.hand = self.deck.get_hand()
+    if not self.started:
+      self.deck.shuffle()
+      
+      for player in self.players:
+        player.hand = self.deck.get_hand()
 
-    self._draw_discard()
+      self._draw_discard()
+      self.started = True
 
   def get_current_player(self) -> Player:
     return self.players[self.current_player_index]   
+
+  def get_player_by_id(self, player_id):
+    return self._players_by_id[player_id]
 
   def progress(self, play: Play):
     if self.get_current_player() != play.player:
