@@ -1,7 +1,7 @@
 from typing import Dict
 from flask import Flask, request, abort
 
-from uno import Game, Player
+from uno import Game, Play, Player
 
 app = Flask('pyuno')
 GAMES_BY_ID = {}
@@ -31,7 +31,7 @@ def hello():
 
   return result
 
-@app.route('/game/<game_id>/')
+@app.route('/game/<game_id>')
 def get_game_public_info(game_id):
   game = get_game(game_id)
 
@@ -65,11 +65,37 @@ def get_player_data(game_id, player_id):
 @app.route('/game/<game_id>/start', methods = ['POST'])
 def start_game(game_id: str):
   players = get_players(request)
+  game_existed = True
   if not game_id in GAMES_BY_ID:
     GAMES_BY_ID[game_id] = Game(players, game_id)
+    game_existed = False
   
   game = get_game(game_id)
 
   game.start()
 
-  return {"status": "OK"}
+  return {"status": "ok"} if game_existed else {"status": "created"}
+
+@app.route('/game/<game_id>/play', methods = ['POST'])
+def play(game_id: str):
+  game = get_game(game_id)
+  current_player = game.get_current_player()
+  content = request.json
+  player_cards_by_id = {c.id: c for c in current_player.hand}
+
+  if content['player_id'] != current_player.id:
+    abort(403)
+  if not content['card_id'] in player_cards_by_id:
+    print(f"Card {content['card_id']} not present on player's hand")
+    abort(400)
+  
+  game.progress(
+    Play(
+      player = current_player,
+      action = content['action'],
+      card   = player_cards_by_id[content['card_id']],
+      suit   = content['suit']
+    )
+  )
+
+  return {"status": "ok"}

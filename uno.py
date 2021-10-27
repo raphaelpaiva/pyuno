@@ -81,7 +81,7 @@ class Deck(UnoObject):
     for suit in SUITS:
       self.cards_by_suit[suit] = []
       self._makedeck(suit)
-  
+
   def _makedeck(self, suit: str):
     if suit != 'wild':
       zero_card = Card('0', suit)
@@ -117,21 +117,19 @@ class Deck(UnoObject):
     random.shuffle(self.cards)
 
   def get_hand(self) -> List[Card]:
-    hand = []
-    for _ in range(PLAYER_HAND_SIZE):
-      hand.append(self.cards.pop())
-    
-    return hand
+    return self.draw(PLAYER_HAND_SIZE)
   
   def draw(self, num_cards = 1) -> List[Card]:
     cards = []
-    for i in range(num_cards):
-      cards.append(self.cards.pop())
+    for _ in range(num_cards):
+      card = self.cards.pop()
+      cards.append(card)
     
     return cards
 
   def size(self) -> int:
     return len(self.cards)
+
 
 class Player(UnoObject):
   def __init__(self, name: str, color: str, id: str = None) -> None:
@@ -181,6 +179,14 @@ class Play(UnoObject):
   
   def get_suit(self) -> str:
     return self.suit
+  
+  def as_dict(self) -> dict:
+    return {
+      'player': self.player.as_dict(),
+      'action': self.action,
+      'card': self.card.as_dict() if self.card is not None else None,
+      'suit': self.suit
+    }
 
 def is_card_playable(card: Card, discard_top: Card) -> bool:
   return card.value == discard_top.value \
