@@ -1,4 +1,4 @@
-from typing import Dict
+import sys
 from flask import Flask, request, abort
 
 from uno import Game, Play, Player
@@ -46,7 +46,8 @@ def get_game_public_info(game_id):
     'started': game.started,
     'players': player_dicts,
     'discard_top': game.get_discard_top().as_dict(),
-    'current_player': game.get_current_player().id
+    'current_player': game.get_current_player().id,
+    'winner_id': game.winner.id if game.winner is not None else None
   }
 
 @app.route('/game/<game_id>/player/<player_id>')
@@ -83,19 +84,29 @@ def play(game_id: str):
   content = request.json
   player_cards_by_id = {c.id: c for c in current_player.hand}
 
-  if content['player_id'] != current_player.id:
+  player_id = content['player_id']
+  card_id   = content['card_id']
+  suit      = content['suit']
+
+  if player_id != current_player.id:
     abort(403)
-  if not content['card_id'] in player_cards_by_id:
-    print(f"Card {content['card_id']} not present on player's hand")
+  
+  if card_id is not None and not card_id in player_cards_by_id:
+    print(f"Card {card_id} not present on player's hand")
     abort(400)
   
+  action = content['action']
   game.progress(
     Play(
       player = current_player,
-      action = content['action'],
-      card   = player_cards_by_id[content['card_id']],
-      suit   = content['suit']
+      action = action,
+      card   = player_cards_by_id[card_id] if action == 'play' else None,
+      suit   = suit if action == 'play' else None
     )
   )
 
   return {"status": "ok"}
+
+if __name__ == '__main__':
+  debug_active = len(sys.argv) > 1 and sys.argv[1] == '--debug'
+  app.run(debug=debug_active)
