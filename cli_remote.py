@@ -133,7 +133,7 @@ try:
         break
     else:
       console.log("Not your turn")
-      sleep(5)
+      sleep(1)
   
   winner_id = game_data['winner_id']
 
